@@ -1,0 +1,18 @@
+{
+  "name": "Lidia - 04.02.2026",
+  "short_name": "Lidia",
+  "description": "Birthday itinerary",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "theme_color": "#1f1a19",
+  "background_color": "#1f1a19",
+  "icons": [
+    {
+      "src": "icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

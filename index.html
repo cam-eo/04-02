@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <meta name="theme-color" content="#151514" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <title>Lidia - 04.02.2026</title>
+    <link rel="manifest" href="./manifest.json" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <div id="landing" class="view">
+      <h1>Happy Birthday!</h1>
+      <button type="button" id="start-btn" class="btn-primary">Start</button>
+    </div>
+
+    <div id="itinerary" class="view view-hidden">
+      <div id="cards" class="cards"></div>
+    </div>
+
+    <script src="./app.js"></script>
+    <script>
+      if ("serviceWorker" in navigator && location.protocol === "https:") {
+        navigator.serviceWorker
+          .register("sw.js", { scope: "./" })
+          .catch(function () {});
+      }
+    </script>
+  </body>
+</html>

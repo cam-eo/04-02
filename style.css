@@ -1,0 +1,175 @@
+:root {
+  color-scheme: dark;
+
+  --foreground: #f5e5ca;
+  --background: #151514;
+  --primary: #4b0f3b;
+
+  --text-sm: 0.875rem;
+  --text-base: 1rem;
+  --text-lg: 1.5rem;
+  --text-xl: 2rem;
+  --text-2xl: 2.5rem;
+  --text-3xl: 3rem;
+  --text-4xl: 3.5rem;
+  --text-5xl: 4rem;
+
+  --disabled-opacity: 0.6;
+  --touch-min: 44px;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: system-ui, -apple-system, sans-serif;
+  font-size: var(--text-base);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right)
+    env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+.view {
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+}
+
+.view-hidden {
+  display: none;
+}
+
+.view-active {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Landing */
+#landing {
+  text-align: center;
+  gap: 1.5rem;
+}
+
+#landing h1 {
+  margin: 0;
+  font-size: var(--text-3xl);
+  font-weight: 700;
+}
+
+.btn-primary {
+  min-height: var(--touch-min);
+  min-width: 160px;
+  padding: 0.75rem 1.5rem;
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--foreground);
+  background: var(--primary);
+  border: none;
+  border-radius: 9999px;
+  cursor: pointer;
+}
+
+.btn-primary:active {
+  opacity: 0.9;
+}
+
+/* Itinerary */
+#itinerary {
+  justify-content: flex-start;
+  padding-top: 2rem;
+  align-items: stretch;
+}
+
+.cards {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+.activity-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem;
+  background: color-mix(in srgb, var(--foreground) 8%, var(--background));
+  border-radius: 1rem;
+  border: 1px solid color-mix(in srgb, var(--foreground) 15%, transparent);
+}
+
+.activity-card.locked {
+  opacity: var(--disabled-opacity);
+  pointer-events: none;
+}
+
+.activity-card .avatar {
+  flex-shrink: 0;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  object-fit: cover;
+  background: color-mix(in srgb, var(--foreground) 12%, var(--background));
+}
+
+.activity-card .content {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.activity-card .content .maps-link {
+  align-self: flex-start;
+  margin-top: 0.25rem;
+}
+
+.activity-card .name {
+  margin: 0 0 0.25rem 0;
+  font-size: var(--text-lg);
+  font-weight: 600;
+}
+
+.activity-card .rating {
+  margin: 0 0 0.5rem 0;
+  font-size: var(--text-sm);
+  opacity: 0.85;
+}
+
+.activity-card .countdown {
+  margin: 0;
+  font-size: var(--text-sm);
+  opacity: 0.9;
+}
+
+.activity-card .maps-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: var(--touch-min);
+  min-width: 120px;
+  padding: 0.5rem 1rem;
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--background);
+  background: var(--primary);
+  border: none;
+  border-radius: 9999px;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.activity-card .maps-link:active {
+  opacity: 0.9;
+}
