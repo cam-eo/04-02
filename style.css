@@ -60,49 +60,49 @@ body {
 }
 .aesthetics-bg-2 {
   right: 8%;
-  top: 12%;
+  top: 30%;
   animation-delay: 0.5s;
   animation-duration: 5.5s;
 }
 .aesthetics-bg-3 {
-  left: 15%;
-  bottom: 20%;
+  left: 5%;
+  bottom: 5%;
+  /* transform: rotate(-30deg); */
   animation-delay: 1s;
   animation-duration: 4.5s;
 }
 .aesthetics-bg-4 {
   right: 5%;
-  bottom: 15%;
+  bottom: 12%;
   animation-delay: 1.5s;
   animation-duration: 6s;
 }
 .aesthetics-bg-5 {
   left: 50%;
   top: 8%;
-  transform: translateX(-50%);
   animation-delay: 2s;
   animation-duration: 4s;
 }
 .aesthetics-bg-6 {
   right: 20%;
-  top: 45%;
+  top: 40%;
   animation-delay: 2.5s;
   animation-duration: 5.2s;
 }
 .aesthetics-bg-7 {
   left: 8%;
-  top: 40%;
+  top: 35%;
   animation-delay: 3s;
   animation-duration: 5.8s;
 }
 .aesthetics-bg-8 {
-  right: 25%;
-  bottom: 8%;
+  right: 5%;
+  bottom: 5%;
   animation-delay: 3.5s;
   animation-duration: 4.8s;
 }
 .aesthetics-bg-9 {
-  left: 35%;
+  left: 45%;
   bottom: 35%;
   animation-delay: 4s;
   animation-duration: 5.3s;
@@ -121,25 +121,6 @@ body {
   }
   75% {
     transform: translate(1px, 2px) rotate(0.2deg);
-  }
-}
-
-.aesthetics-bg-5 {
-  animation-name: wiggle-center;
-}
-@keyframes wiggle-center {
-  0%,
-  100% {
-    transform: translateX(-50%) translate(0, 0) rotate(0deg);
-  }
-  25% {
-    transform: translateX(-50%) translate(2px, -2px) rotate(0.5deg);
-  }
-  50% {
-    transform: translateX(-50%) translate(-1px, 1px) rotate(-0.3deg);
-  }
-  75% {
-    transform: translateX(-50%) translate(1px, 2px) rotate(0.2deg);
   }
 }
 
@@ -202,6 +183,7 @@ body {
 }
 
 .cards {
+  opacity: 0;
   width: 100%;
   max-width: 640px;
   display: flex;
