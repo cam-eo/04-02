@@ -1,12 +1,7 @@
-// Easy to edit: when the 2nd and 3rd activities unlock (ISO string or null for always open)
-const UNLOCK_TIMES = [
-  null, // Activity 1 (brunch) – always open
-  "2026-02-04T12:00:00", // Activity 2 – e.g. noon
-  "2026-02-04T18:00:00", // Activity 3 – e.g. 6 PM
-];
-
 const ITINERARY = [
   {
+    // unlockTime: "2026-02-04T00:00:00",
+    unlockTime: null,
     title: "Brunch",
     description: "Eggs Benaddicted",
     url: "https://maps.app.goo.gl/aMu9chewF6xib1wR7",
@@ -16,6 +11,7 @@ const ITINERARY = [
       "https://freight.cargo.site/i/f7617d2523e80293346d8ededafe8930ff4c5e1afe17f22375a5e5ffba038baa/b2f8e7d38-4fbc-4d39-8338-a303b3c96879.jpg",
   },
   {
+    unlockTime: "2026-02-04T12:00:00",
     title: "Movie",
     description: "The Housemaids",
     url: "./MovieTicket.pdf",
@@ -25,6 +21,7 @@ const ITINERARY = [
       "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcRFQkWrP62a03eDmpaDIJsxra5_KAPk1QABqs3YFx8tt191uLBd",
   },
   {
+    unlockTime: "2026-02-04T18:00:00",
     title: "Dinner",
     description: "JOY cocktails. tacos. Burritos. Burgers",
     url: "https://maps.app.goo.gl/BJ1mrMRRta2XSUo36",
@@ -70,21 +67,34 @@ function formatCountdown(isoString) {
   return `Opens in ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
 
+/** Returns { label: "Opens in"|"Opens at", value: "HH:MM:SS"|"12:00 PM" } for locked display, or null when unlocked */
+function getCountdownParts(isoString) {
+  const target = new Date(isoString).getTime();
+  const now = Date.now();
+  const diff = target - now;
+  if (diff <= 0) return null;
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  const pad = (n) => String(n).padStart(2, "0");
+  return {
+    label: "Opens in",
+    value: `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`,
+  };
+}
+
 function formatUnlockTime(isoString) {
   const d = new Date(isoString);
-  return `Opens at ${d.toLocaleTimeString([], {
-    hour: "numeric",
-    minute: "2-digit",
-  })}`;
+  return d.toLocaleTimeString([], { hour: "numeric", minute: "2-digit" });
 }
 
 function isUnlocked(index) {
-  const t = UNLOCK_TIMES[index];
+  const t = ITINERARY[index]?.unlockTime;
   if (t == null) return true;
   return Date.now() >= new Date(t).getTime();
 }
 
-/** @type {Map<number, HTMLParagraphElement>} */
+/** @type {Map<number, { valueEl: HTMLElement, labelEl: HTMLElement }>} */
 const countdownEls = new Map();
 
 function renderCards() {
@@ -92,63 +102,79 @@ function renderCards() {
   countdownEls.clear();
   ITINERARY.forEach((activity, index) => {
     const unlocked = isUnlocked(index);
-    const unlockTime = UNLOCK_TIMES[index];
+    const unlockTime = activity.unlockTime;
     const card = document.createElement("div");
     card.className = "activity-card" + (unlocked ? "" : " locked");
     card.setAttribute("data-index", index);
 
-    const initialCountdown =
-      !unlocked && unlockTime != null
-        ? formatCountdown(unlockTime) || formatUnlockTime(unlockTime)
-        : "";
+    const avatarSrc = unlocked ? activity.imageUrl : "./icons/favicon.svg";
 
-    card.innerHTML = `
-      <img class="avatar" src="${activity.imageUrl}" alt="" loading="lazy" />
-      <div class="content">
-        <h2 class="name">${activity.title}</h2>
-        <p class="description">${activity.description}</p>
-        <p class="rating">${activity.rating}</p>
-        <p class="countdown">${initialCountdown}</p>
-        ${
-          unlocked
-            ? `<a class="maps-link" href="${activity.url}" target="_blank" rel="noopener">${activity.ctaText}</a>`
-            : ""
-        }
-      </div>
-    `;
-
-    if (unlockTime != null) {
-      const countdownP = card.querySelector(".countdown");
-      if (countdownP) countdownEls.set(index, countdownP);
+    if (unlocked) {
+      card.innerHTML = `
+        <img class="avatar" src="${avatarSrc}" alt="" loading="lazy" data-image-url="${activity.imageUrl}" />
+        <div class="content">
+          <h2 class="name">${activity.title}</h2>
+          <p class="description">${activity.description}</p>
+          <p class="rating">${activity.rating}</p>
+          <a class="maps-link" href="${activity.url}" target="_blank" rel="noopener">${activity.ctaText}</a>
+        </div>
+      `;
+    } else {
+      const parts = unlockTime != null ? getCountdownParts(unlockTime) : null;
+      const label = parts ? parts.label : "Opens at";
+      const value = parts
+        ? parts.value
+        : (unlockTime && formatUnlockTime(unlockTime)) || "";
+      card.innerHTML = `
+        <img class="avatar" src="${avatarSrc}" alt="" loading="lazy" data-image-url="${activity.imageUrl}" />
+        <div class="content content--countdown">
+          <p class="countdown-label">${label}</p>
+          <p class="countdown-value">${value}</p>
+        </div>
+      `;
+      if (unlockTime != null) {
+        const valueEl = card.querySelector(".countdown-value");
+        const labelEl = card.querySelector(".countdown-label");
+        if (valueEl && labelEl) countdownEls.set(index, { valueEl, labelEl });
+      }
     }
 
     cardsEl.appendChild(card);
   });
 }
 
-function refreshCountdownText(index, countdownEl) {
-  const unlockTime = UNLOCK_TIMES[index];
+function refreshCountdownText(index, { valueEl, labelEl }) {
+  const unlockTime = ITINERARY[index]?.unlockTime;
   if (unlockTime == null) return;
   if (isUnlocked(index)) {
-    countdownEl.textContent = "";
-    const content = countdownEl.closest(".content");
-    const card = countdownEl.closest(".activity-card");
+    const content = valueEl.closest(".content");
+    const card = valueEl.closest(".activity-card");
     if (card && content) {
       card.classList.remove("locked");
       const activity = ITINERARY[index];
-      const link = document.createElement("a");
-      link.className = "maps-link";
-      link.href = activity.url;
-      link.target = "_blank";
-      link.rel = "noopener";
-      link.textContent = activity.ctaText;
-      content.appendChild(link);
+      const avatar = card.querySelector(".avatar");
+      if (avatar && avatar.dataset.imageUrl) {
+        avatar.src = avatar.dataset.imageUrl;
+      }
+      content.className = "content";
+      content.innerHTML = `
+        <h2 class="name">${activity.title}</h2>
+        <p class="description">${activity.description}</p>
+        <p class="rating">${activity.rating}</p>
+        <a class="maps-link" href="${activity.url}" target="_blank" rel="noopener">${activity.ctaText}</a>
+      `;
     }
     countdownEls.delete(index);
     return;
   }
-  const text = formatCountdown(unlockTime) || formatUnlockTime(unlockTime);
-  countdownEl.textContent = text;
+  const parts = getCountdownParts(unlockTime);
+  if (parts) {
+    labelEl.textContent = parts.label;
+    valueEl.textContent = parts.value;
+  } else {
+    labelEl.textContent = "Opens at";
+    valueEl.textContent = formatUnlockTime(unlockTime);
+  }
 }
 
 let countdownInterval = null;
@@ -183,6 +209,14 @@ startBtn.addEventListener("click", () => {
     localStorage.setItem(STORAGE_KEY, "true");
   } catch (_) {}
   showItinerary();
+});
+
+const clearStorageBtn = document.getElementById("clear-storage-btn");
+clearStorageBtn.addEventListener("click", () => {
+  try {
+    localStorage.removeItem(STORAGE_KEY);
+  } catch (_) {}
+  location.reload();
 });
 
 if (
