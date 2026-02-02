@@ -33,27 +33,197 @@ const ITINERARY = [
 ];
 
 const STORAGE_KEY = "started";
+const GATE_PASSWORD_KEY = "gate:password";
+const GATE_CAPTCHA_KEY = "gate:captcha";
 
+const PASSWORD = "Pebzi";
+const HINT_TEXT = "I have just eaten. I am still hungry! Who am I?";
+const HINT_AVAILABLE_AT = "2026-02-03T12:00:00";
+
+const CAPTCHA_CORRECT_TILES = [1, 2, 5, 7, 9];
+const CAPTCHA_IMAGE_BASE = "./not-a-robot/";
+
+const passwordGate = document.getElementById("password-gate");
+const captchaGate = document.getElementById("captcha-gate");
 const landing = document.getElementById("landing");
 const itinerary = document.getElementById("itinerary");
 const startBtn = document.getElementById("start-btn");
 const cardsEl = document.getElementById("cards");
 
+const passwordForm = document.getElementById("password-form");
+const passwordInput = document.getElementById("password-input");
+const passwordError = document.getElementById("password-error");
+const hintBtn = document.getElementById("hint-btn");
+const hintCountdown = document.getElementById("hint-countdown");
+const hintText = document.getElementById("hint-text");
+
+function hideAllViews() {
+  [passwordGate, captchaGate, landing, itinerary].forEach((el) => {
+    el.classList.add("view-hidden");
+    el.classList.remove("view-active");
+  });
+}
+
+function showPasswordGate() {
+  hideAllViews();
+  passwordGate.classList.remove("view-hidden");
+  passwordGate.classList.add("view-active");
+  passwordInput.value = "";
+  passwordError.classList.add("view-hidden");
+  passwordError.textContent = "";
+  updateHintUI();
+  startHintCountdown();
+}
+
+function showCaptchaGate() {
+  hideAllViews();
+  captchaGate.classList.remove("view-hidden");
+  captchaGate.classList.add("view-active");
+  renderCaptchaGrid();
+  const err = document.getElementById("captcha-error");
+  if (err) {
+    err.classList.add("view-hidden");
+    err.textContent = "";
+  }
+}
+
 function showLanding() {
+  hideAllViews();
   landing.classList.remove("view-hidden");
   landing.classList.add("view-active");
-  itinerary.classList.add("view-hidden");
-  itinerary.classList.remove("view-active");
 }
 
 function showItinerary() {
-  landing.classList.add("view-hidden");
-  landing.classList.remove("view-active");
+  hideAllViews();
   itinerary.classList.remove("view-hidden");
   itinerary.classList.add("view-active");
   renderCards();
   startCountdown();
 }
+
+function isHintAvailable() {
+  return Date.now() >= new Date(HINT_AVAILABLE_AT).getTime();
+}
+
+function getHintCountdownParts() {
+  const target = new Date(HINT_AVAILABLE_AT).getTime();
+  const now = Date.now();
+  const diff = target - now;
+  if (diff <= 0) return null;
+  const hours = Math.floor(diff / (1000 * 60 * 60));
+  const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  const seconds = Math.floor((diff % (1000 * 60)) / 1000);
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+}
+
+function updateHintUI() {
+  if (isHintAvailable()) {
+    hintBtn.disabled = false;
+    hintCountdown.classList.add("view-hidden");
+    hintCountdown.textContent = "";
+  } else {
+    hintBtn.disabled = true;
+    hintCountdown.classList.remove("view-hidden");
+    const parts = getHintCountdownParts();
+    hintCountdown.textContent = parts ? `Hint available in ${parts}` : "";
+  }
+}
+
+let hintCountdownInterval = null;
+
+function startHintCountdown() {
+  if (hintCountdownInterval) clearInterval(hintCountdownInterval);
+  updateHintUI();
+  if (!isHintAvailable()) {
+    hintCountdownInterval = setInterval(() => {
+      updateHintUI();
+      if (isHintAvailable() && hintCountdownInterval) {
+        clearInterval(hintCountdownInterval);
+        hintCountdownInterval = null;
+      }
+    }, 1000);
+  }
+}
+
+passwordForm.addEventListener("submit", (e) => {
+  e.preventDefault();
+  const value = (passwordInput.value || "").trim();
+  if (value === PASSWORD) {
+    try {
+      localStorage.setItem(GATE_PASSWORD_KEY, "true");
+    } catch (_) {}
+    if (hintCountdownInterval) {
+      clearInterval(hintCountdownInterval);
+      hintCountdownInterval = null;
+    }
+    showCaptchaGate();
+  } else {
+    passwordError.textContent = "Wrong password. Try again.";
+    passwordError.classList.remove("view-hidden");
+  }
+});
+
+hintBtn.addEventListener("click", () => {
+  if (!isHintAvailable()) return;
+  hintText.textContent = HINT_TEXT;
+  hintText.classList.remove("view-hidden");
+});
+
+function renderCaptchaGrid() {
+  const grid = document.getElementById("captcha-grid");
+  if (!grid) return;
+  grid.innerHTML = "";
+  for (let i = 1; i <= 9; i++) {
+    const tile = document.createElement("button");
+    tile.type = "button";
+    tile.className = "captcha-tile";
+    tile.setAttribute("data-tile", i);
+    tile.setAttribute("aria-pressed", "false");
+    const img = document.createElement("img");
+    img.src = `${CAPTCHA_IMAGE_BASE}${i}.jpg`;
+    img.alt = "";
+    img.loading = "lazy";
+    tile.appendChild(img);
+    tile.addEventListener("click", () => {
+      const pressed = tile.getAttribute("aria-pressed") === "true";
+      tile.setAttribute("aria-pressed", String(!pressed));
+      tile.classList.toggle("captcha-tile--selected", !pressed);
+    });
+    grid.appendChild(tile);
+  }
+}
+
+function getSelectedCaptchaTiles() {
+  const tiles = document.querySelectorAll(".captcha-tile[aria-pressed='true']");
+  return Array.from(tiles)
+    .map((t) => Number(t.getAttribute("data-tile")))
+    .sort((a, b) => a - b);
+}
+
+function arraysEqual(a, b) {
+  if (a.length !== b.length) return false;
+  return a.every((v, i) => v === b[i]);
+}
+
+document.getElementById("captcha-submit").addEventListener("click", () => {
+  const selected = getSelectedCaptchaTiles();
+  const correct = [...CAPTCHA_CORRECT_TILES].sort((a, b) => a - b);
+  const errEl = document.getElementById("captcha-error");
+  if (arraysEqual(selected, correct)) {
+    try {
+      localStorage.setItem(GATE_CAPTCHA_KEY, "true");
+      localStorage.setItem(STORAGE_KEY, "true");
+    } catch (_) {}
+    showItinerary();
+  } else {
+    renderCaptchaGrid();
+    if (errEl) {
+      errEl.textContent = "Nope. Try again.";
+      errEl.classList.remove("view-hidden");
+    }
+  }
+});
 
 function formatCountdown(isoString) {
   const target = new Date(isoString).getTime();
@@ -215,15 +385,20 @@ const clearStorageBtn = document.getElementById("clear-storage-btn");
 clearStorageBtn.addEventListener("click", () => {
   try {
     localStorage.removeItem(STORAGE_KEY);
+    localStorage.removeItem(GATE_PASSWORD_KEY);
+    localStorage.removeItem(GATE_CAPTCHA_KEY);
   } catch (_) {}
   location.reload();
 });
 
-if (
-  typeof localStorage !== "undefined" &&
-  localStorage.getItem(STORAGE_KEY) === "true"
-) {
-  showItinerary();
+if (typeof localStorage !== "undefined") {
+  if (localStorage.getItem(GATE_CAPTCHA_KEY) === "true") {
+    showItinerary();
+  } else if (localStorage.getItem(GATE_PASSWORD_KEY) === "true") {
+    showCaptchaGate();
+  } else {
+    showPasswordGate();
+  }
 } else {
-  showLanding();
+  showPasswordGate();
 }

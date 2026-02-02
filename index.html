@@ -67,7 +67,46 @@
         alt=""
       />
     </div>
-    <div id="landing" class="view">
+
+    <div id="password-gate" class="view">
+      <h1>Enter password</h1>
+      <form id="password-form" class="password-form">
+        <input
+          type="password"
+          id="password-input"
+          class="password-input"
+          autocomplete="off"
+          placeholder="Password"
+        />
+        <button type="submit" id="password-submit" class="btn-primary">
+          Submit
+        </button>
+      </form>
+      <p
+        id="password-error"
+        class="password-error view-hidden"
+        role="alert"
+      ></p>
+      <div class="hint-area">
+        <button type="button" id="hint-btn" class="btn-secondary" disabled>
+          Hint
+        </button>
+        <p id="hint-countdown" class="hint-countdown"></p>
+        <p id="hint-text" class="hint-text view-hidden"></p>
+      </div>
+    </div>
+
+    <div id="captcha-gate" class="view view-hidden">
+      <h1>Select all the pebbles</h1>
+      <p class="captcha-prompt">Verify you're not a robot</p>
+      <div id="captcha-grid" class="captcha-grid"></div>
+      <button type="button" id="captcha-submit" class="btn-primary">
+        Verify
+      </button>
+      <p id="captcha-error" class="captcha-error view-hidden" role="alert"></p>
+    </div>
+
+    <div id="landing" class="view view-hidden">
       <h1>Happy Birthday!</h1>
       <button type="button" id="start-btn" class="btn-primary">Start</button>
     </div>

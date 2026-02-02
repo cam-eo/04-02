@@ -1,5 +1,22 @@
+@font-face {
+  font-family: "Satoshi";
+  src: url("./fonts/Satoshi-Variable.ttf") format("truetype");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "DancingScript";
+  src: url("./fonts/DancingScript-Variable.ttf") format("truetype");
+  font-weight: 400;
+  font-display: swap;
+}
+
 :root {
   color-scheme: dark;
+
+  --font-body: "Satoshi", system-ui, -apple-system, sans-serif;
+  --font-heading: "DancingScript", system-ui, -apple-system, sans-serif;
 
   --foreground: #f5e5ca;
   --background: #151514;
@@ -30,10 +47,19 @@ body {
   min-height: 100dvh;
   background: var(--background);
   color: var(--foreground);
-  font-family: system-ui, -apple-system, sans-serif;
+  font-family: var(--font-body);
   font-size: var(--text-base);
   padding: env(safe-area-inset-top) env(safe-area-inset-right)
     env(safe-area-inset-bottom) env(safe-area-inset-left);
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
 }
 
 /* Aesthetics background */
@@ -175,6 +201,135 @@ body {
   opacity: 0.9;
 }
 
+.btn-secondary {
+  min-height: var(--touch-min);
+  min-width: 100px;
+  padding: 0.5rem 1rem;
+  font-size: var(--text-base);
+  font-weight: 600;
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 15%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 35%, transparent);
+  border-radius: 0.75rem;
+  cursor: pointer;
+}
+.btn-secondary:disabled {
+  opacity: var(--disabled-opacity);
+  cursor: not-allowed;
+}
+.btn-secondary:not(:disabled):active {
+  opacity: 0.9;
+}
+
+/* Password gate */
+#password-gate {
+  text-align: center;
+  gap: 1.5rem;
+}
+#password-gate h1 {
+  margin: 0;
+  font-size: var(--text-3xl);
+  font-weight: 700;
+}
+.password-form {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  width: 100%;
+  max-width: 280px;
+}
+.password-input {
+  width: 100%;
+  min-height: var(--touch-min);
+  padding: 0.75rem 1rem;
+  font-size: var(--text-base);
+  color: var(--foreground);
+  background: color-mix(in srgb, var(--foreground) 10%, var(--background));
+  border: 1px solid color-mix(in srgb, var(--foreground) 25%, transparent);
+  border-radius: 0.75rem;
+}
+.password-input::placeholder {
+  opacity: 0.7;
+}
+.password-error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: #e57373;
+}
+.hint-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+.hint-countdown {
+  margin: 0;
+  font-size: var(--text-sm);
+  opacity: 0.85;
+}
+.hint-text {
+  margin: 0;
+  font-size: var(--text-base);
+  font-style: italic;
+  opacity: 0.95;
+  max-width: 320px;
+}
+
+/* Captcha gate */
+#captcha-gate {
+  text-align: center;
+  gap: 1.25rem;
+}
+#captcha-gate h1 {
+  margin: 0;
+  font-size: var(--text-2xl);
+  font-weight: 700;
+}
+.captcha-prompt {
+  margin: 0;
+  font-size: var(--text-sm);
+  opacity: 0.9;
+}
+.captcha-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+  width: 100%;
+  max-width: min(90vw, 320px);
+  aspect-ratio: 1;
+}
+.captcha-tile {
+  position: relative;
+  padding: 0;
+  margin: 0;
+  border: 3px solid color-mix(in srgb, var(--foreground) 20%, transparent);
+  border-radius: 0.5rem;
+  background: var(--background);
+  cursor: pointer;
+  overflow: hidden;
+}
+.captcha-tile img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+.captcha-tile--selected,
+.captcha-tile:focus-visible {
+  border-color: var(--surface);
+  box-shadow: 0 0 0 2px var(--surface);
+}
+.captcha-tile:active {
+  opacity: 0.95;
+}
+.captcha-error {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: #e57373;
+}
+
 /* Itinerary */
 #itinerary {
   justify-content: flex-start;
@@ -183,7 +338,6 @@ body {
 }
 
 .cards {
-  opacity: 0;
   width: 100%;
   max-width: 640px;
   display: flex;
