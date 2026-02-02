@@ -7,23 +7,31 @@ const UNLOCK_TIMES = [
 
 const ITINERARY = [
   {
-    name: "Brunch",
-    googleMapsUrl: "https://maps.app.goo.gl/aMu9chewF6xib1wR7",
-    rating: 4.7,
+    title: "Brunch",
+    description: "Eggs Benaddicted",
+    url: "https://maps.app.goo.gl/aMu9chewF6xib1wR7",
+    ctaText: "Open in Maps",
+    rating: "4.7 - Google Maps",
     imageUrl:
-      "https://www.google.com/maps/place/Eggs+Benaddicted/@52.3644258,4.8850775,3a,75y,90t/data=!3m8!1e2!3m6!1sAF1QipN-bcavra_k8ATRbnjzVmIkzodNhCG6C1L1Lrvg!2e10!3e12!6shttps:%2F%2Flh3.googleusercontent.com%2Fp%2FAF1QipN-bcavra_k8ATRbnjzVmIkzodNhCG6C1L1Lrvg%3Dw203-h304-k-no!7i3120!8i4680!4m16!1m8!3m7!1s0x47c609c9b0259f8b:0xfa8c0f7d53d9f5b4!2sEggs+Benaddicted!8m2!3d52.364388!4d4.8849487!10e9!16s%2Fg%2F11mvkb6b16!3m6!1s0x47c609c9b0259f8b:0xfa8c0f7d53d9f5b4!8m2!3d52.364388!4d4.8849487!10e5!16s%2Fg%2F11mvkb6b16?entry=ttu&g_ep=EgoyMDI2MDEyOC4wIKXMDSoASAFQAw%3D%3D#",
+      "https://freight.cargo.site/i/f7617d2523e80293346d8ededafe8930ff4c5e1afe17f22375a5e5ffba038baa/b2f8e7d38-4fbc-4d39-8338-a303b3c96879.jpg",
   },
   {
-    name: "Movie",
-    googleMapsUrl: "https://www.google.com/maps",
-    rating: 4.5,
-    imageUrl: "https://via.placeholder.com/128/1f1a19/f5e5ca?text=2",
+    title: "Movie",
+    description: "The Housemaids",
+    url: "./MovieTicket.pdf",
+    ctaText: "Open Movie Ticket",
+    rating: "74% - Rotten Tomatoes",
+    imageUrl:
+      "https://encrypted-tbn2.gstatic.com/images?q=tbn:ANd9GcRFQkWrP62a03eDmpaDIJsxra5_KAPk1QABqs3YFx8tt191uLBd",
   },
   {
-    name: "Dinner",
-    googleMapsUrl: "https://www.google.com/maps",
-    rating: 4.8,
-    imageUrl: "https://via.placeholder.com/128/1f1a19/f5e5ca?text=3",
+    title: "Dinner",
+    description: "JOY cocktails. tacos. Burritos. Burgers",
+    url: "https://maps.app.goo.gl/BJ1mrMRRta2XSUo36",
+    ctaText: "Open in Maps",
+    rating: "4.8 - Google Maps",
+    imageUrl:
+      "https://dynamic-media-cdn.tripadvisor.com/media/photo-o/30/5e/2a/55/joy-texmex.jpg?w=1200&h=1200&s=1",
   },
 ];
 
@@ -57,10 +65,9 @@ function formatCountdown(isoString) {
   if (diff <= 0) return null;
   const hours = Math.floor(diff / (1000 * 60 * 60));
   const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
-  if (hours > 0) return `Opens in ${hours}h ${minutes}m`;
-  if (minutes > 0) return `Opens in ${minutes}m`;
   const seconds = Math.floor((diff % (1000 * 60)) / 1000);
-  return `Opens in ${seconds}s`;
+  const pad = (n) => String(n).padStart(2, "0");
+  return `Opens in ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
 }
 
 function formatUnlockTime(isoString) {
@@ -98,12 +105,13 @@ function renderCards() {
     card.innerHTML = `
       <img class="avatar" src="${activity.imageUrl}" alt="" loading="lazy" />
       <div class="content">
-        <h2 class="name">${activity.name}</h2>
-        <p class="rating">${activity.rating} ★ (Google)</p>
+        <h2 class="name">${activity.title}</h2>
+        <p class="description">${activity.description}</p>
+        <p class="rating">${activity.rating}</p>
         <p class="countdown">${initialCountdown}</p>
         ${
           unlocked
-            ? `<a class="maps-link" href="${activity.googleMapsUrl}" target="_blank" rel="noopener">Open in Maps</a>`
+            ? `<a class="maps-link" href="${activity.url}" target="_blank" rel="noopener">${activity.ctaText}</a>`
             : ""
         }
       </div>
@@ -130,10 +138,10 @@ function refreshCountdownText(index, countdownEl) {
       const activity = ITINERARY[index];
       const link = document.createElement("a");
       link.className = "maps-link";
-      link.href = activity.googleMapsUrl;
+      link.href = activity.url;
       link.target = "_blank";
       link.rel = "noopener";
-      link.textContent = "Open in Maps";
+      link.textContent = activity.ctaText;
       content.appendChild(link);
     }
     countdownEls.delete(index);
@@ -160,6 +168,15 @@ function startCountdown() {
   runCountdownTick();
   countdownInterval = setInterval(runCountdownTick, 1000);
 }
+
+cardsEl.addEventListener("click", (e) => {
+  const card = e.target.closest(".activity-card");
+  if (!card || card.classList.contains("locked")) return;
+  if (e.target.closest("a.maps-link")) return;
+  const index = Number(card.getAttribute("data-index"));
+  const activity = ITINERARY[index];
+  if (activity?.url) window.open(activity.url, "_blank", "noopener");
+});
 
 startBtn.addEventListener("click", () => {
   try {

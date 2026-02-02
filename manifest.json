@@ -9,9 +9,15 @@
   "background_color": "#1f1a19",
   "icons": [
     {
-      "src": "icons/icon.svg",
+      "src": "icons/favicon.svg",
       "sizes": "any",
       "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/favicon.png",
+      "sizes": "any",
+      "type": "image/png",
       "purpose": "any"
     }
   ]
