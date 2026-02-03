@@ -1,7 +1,6 @@
 const ITINERARY = [
   {
-    // unlockTime: "2026-02-04T00:00:00",
-    unlockTime: null,
+    unlockTime: "2026-02-04T00:00:00",
     title: "Brunch",
     description: "Eggs Benaddicted",
     url: "https://maps.app.goo.gl/aMu9chewF6xib1wR7",
@@ -45,9 +44,7 @@ const CAPTCHA_IMAGE_BASE = "./not-a-robot/";
 
 const passwordGate = document.getElementById("password-gate");
 const captchaGate = document.getElementById("captcha-gate");
-const landing = document.getElementById("landing");
 const itinerary = document.getElementById("itinerary");
-const startBtn = document.getElementById("start-btn");
 const cardsEl = document.getElementById("cards");
 
 const passwordForm = document.getElementById("password-form");
@@ -58,7 +55,12 @@ const hintCountdown = document.getElementById("hint-countdown");
 const hintText = document.getElementById("hint-text");
 
 function hideAllViews() {
-  [passwordGate, captchaGate, landing, itinerary].forEach((el) => {
+  [
+    passwordGate,
+    captchaGate,
+    itinerary,
+    // landing
+  ].forEach((el) => {
     el.classList.add("view-hidden");
     el.classList.remove("view-active");
   });
@@ -89,8 +91,8 @@ function showCaptchaGate() {
 
 function showLanding() {
   hideAllViews();
-  landing.classList.remove("view-hidden");
-  landing.classList.add("view-active");
+  // landing.classList.remove("view-hidden");
+  // landing.classList.add("view-active");
 }
 
 function showItinerary() {
@@ -121,9 +123,11 @@ function updateHintUI() {
   if (isHintAvailable()) {
     hintBtn.disabled = false;
     hintCountdown.classList.add("view-hidden");
+    hintBtn.classList.remove("view-hidden");
     hintCountdown.textContent = "";
   } else {
     hintBtn.disabled = true;
+    hintBtn.classList.add("view-hidden");
     hintCountdown.classList.remove("view-hidden");
     const parts = getHintCountdownParts();
     hintCountdown.textContent = parts ? `Hint available in ${parts}` : "";
@@ -374,12 +378,12 @@ cardsEl.addEventListener("click", (e) => {
   if (activity?.url) window.open(activity.url, "_blank", "noopener");
 });
 
-startBtn.addEventListener("click", () => {
-  try {
-    localStorage.setItem(STORAGE_KEY, "true");
-  } catch (_) {}
-  showItinerary();
-});
+// startBtn.addEventListener("click", () => {
+//   try {
+//     localStorage.setItem(STORAGE_KEY, "true");
+//   } catch (_) {}
+//   showItinerary();
+// });
 
 const clearStorageBtn = document.getElementById("clear-storage-btn");
 clearStorageBtn.addEventListener("click", () => {
