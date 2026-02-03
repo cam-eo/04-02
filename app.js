@@ -151,38 +151,49 @@ function startHintCountdown() {
   }
 }
 
-/** Show one-time notification that stays until Lidia dismisses it (app is on the phone / wake up). */
-function showFirstLoadNotification() {
+/**
+ * Show one-time notification using Service Worker (works on iOS/Android PWAs).
+ * Returns a promise that resolves to true if notification was shown, false otherwise.
+ */
+async function showFirstLoadNotification() {
   console.log("showFirstLoadNotification called");
-  console.log("Notification type:", typeof Notification);
-  console.log("Notification permission:", Notification?.permission);
 
+  // Check if already shown
+  const alreadyShown =
+    localStorage.getItem(FIRST_LOAD_NOTIFICATION_KEY) === "true";
+  if (alreadyShown) {
+    console.log("Notification already shown, skipping");
+    return false;
+  }
+
+  // Check for Notification API support
   if (typeof Notification === "undefined") {
     console.log("Notification API not available");
     return false;
   }
 
+  // Check permission
+  if (Notification.permission !== "granted") {
+    console.log("Notification permission not granted:", Notification.permission);
+    return false;
+  }
+
   try {
-    const alreadyShown =
-      localStorage.getItem(FIRST_LOAD_NOTIFICATION_KEY) === "true";
-    console.log("Notification already shown:", alreadyShown);
+    // Get service worker registration
+    const registration = await navigator.serviceWorker.ready;
+    console.log("Service worker ready, showing notification");
 
-    if (alreadyShown) return false;
-
-    console.log("Creating notification...");
-    const n = new Notification("04.02 – Lidia", {
+    // Show persistent notification via service worker (works on iOS/Android)
+    await registration.showNotification("04.02 – Lidia", {
       body: "The app is on your phone — open me when you're ready!",
       icon: "./icons/favicon.png",
+      badge: "./icons/favicon.png",
       tag: "pwa-first-load",
       requireInteraction: true,
+      vibrate: [200, 100, 200],
     });
 
-    n.onclick = () => {
-      console.log("Notification clicked");
-      window.focus();
-    };
-
-    console.log("Notification created successfully:", n);
+    console.log("Notification shown successfully");
     localStorage.setItem(FIRST_LOAD_NOTIFICATION_KEY, "true");
     return true;
   } catch (err) {
@@ -191,8 +202,11 @@ function showFirstLoadNotification() {
   }
 }
 
-/** Request notification permission (must be called from a user gesture). After grant, show first-load notification. */
-function requestNotificationPermissionAndMaybeNotify() {
+/**
+ * Request notification permission (must be called from a user gesture).
+ * If granted, show the first-load notification.
+ */
+async function requestNotificationPermissionAndMaybeNotify() {
   console.log("requestNotificationPermissionAndMaybeNotify called");
 
   if (typeof Notification === "undefined") {
@@ -202,51 +216,66 @@ function requestNotificationPermissionAndMaybeNotify() {
 
   console.log("Current permission:", Notification.permission);
 
+  // If already granted, try to show notification
   if (Notification.permission === "granted") {
     console.log("Permission already granted, showing notification");
-    showFirstLoadNotification();
+    await showFirstLoadNotification();
     return;
   }
 
-  if (Notification.permission === "default") {
-    console.log("Requesting notification permission...");
-    Notification.requestPermission()
-      .then((permission) => {
-        console.log("Permission result:", permission);
-        if (permission === "granted") {
-          console.log("Permission granted! Showing notification in 100ms...");
-          setTimeout(() => {
-            showFirstLoadNotification();
-          }, 100);
-        } else {
-          console.log("Permission denied or dismissed");
-        }
-      })
-      .catch((err) => {
-        console.error("Error requesting permission:", err);
-      });
-  } else {
+  // If denied, don't ask again
+  if (Notification.permission === "denied") {
     console.log("Permission already denied");
+    return;
+  }
+
+  // Request permission (must be from user gesture)
+  try {
+    console.log("Requesting notification permission...");
+    const permission = await Notification.requestPermission();
+    console.log("Permission result:", permission);
+
+    if (permission === "granted") {
+      console.log("Permission granted! Showing notification...");
+      // Wait a bit for service worker to be fully ready
+      setTimeout(() => {
+        showFirstLoadNotification();
+      }, 500);
+    } else {
+      console.log("Permission denied or dismissed");
+    }
+  } catch (err) {
+    console.error("Error requesting permission:", err);
   }
 }
 
-/** One-time: request notification permission on first tap anywhere (before login). Browsers require a user gesture to show the permission prompt. */
+/**
+ * Request notification permission on first user interaction.
+ * Browsers require a user gesture to show the permission prompt.
+ */
 function requestNotificationOnFirstUserGesture() {
   if (
     typeof Notification === "undefined" ||
     Notification.permission !== "default"
-  )
+  ) {
     return;
+  }
+
+  let hasRun = false;
   const runOnce = () => {
+    if (hasRun) return;
+    hasRun = true;
+    
+    console.log("First user gesture detected, requesting notification permission");
     requestNotificationPermissionAndMaybeNotify();
+    
+    // Clean up listeners
     document.removeEventListener("click", runOnce);
-    document.removeEventListener("touchstart", runOnce, { capture: true });
+    document.removeEventListener("touchstart", runOnce);
   };
+
   document.addEventListener("click", runOnce, { once: true });
-  document.addEventListener("touchstart", runOnce, {
-    once: true,
-    capture: true,
-  });
+  document.addEventListener("touchstart", runOnce, { once: true, capture: true });
 }
 
 passwordForm.addEventListener("submit", (e) => {
@@ -477,13 +506,6 @@ cardsEl.addEventListener("click", (e) => {
   if (activity?.url) window.open(activity.url, "_blank", "noopener");
 });
 
-// startBtn.addEventListener("click", () => {
-//   try {
-//     localStorage.setItem(STORAGE_KEY, "true");
-//   } catch (_) {}
-//   showItinerary();
-// });
-
 const clearStorageBtn = document.getElementById("clear-storage-btn");
 clearStorageBtn.addEventListener("click", () => {
   try {
@@ -495,27 +517,36 @@ clearStorageBtn.addEventListener("click", () => {
   location.reload();
 });
 
-const testNotificationBtn = document.getElementById("test-notification-btn");
-testNotificationBtn.addEventListener("click", () => {
-  console.log("Test notification button clicked");
-  console.log("Current notification permission:", Notification?.permission);
+/**
+ * Initialize notifications after service worker is ready.
+ * Wait for SW registration to complete before attempting to show notifications.
+ */
+function initializeNotifications() {
+  if (typeof Notification === "undefined") {
+    console.log("Notifications not supported");
+    return;
+  }
 
-  // Temporarily remove the flag so we can test again
-  const wasShown = localStorage.getItem(FIRST_LOAD_NOTIFICATION_KEY);
-  console.log("Was shown before:", wasShown);
-  localStorage.removeItem(FIRST_LOAD_NOTIFICATION_KEY);
-
-  requestNotificationPermissionAndMaybeNotify();
-});
-
-// Notifications: if already granted, show once; otherwise ask on first tap (before login)
-if (typeof Notification !== "undefined") {
-  if (Notification.permission === "granted") {
-    requestNotificationPermissionAndMaybeNotify();
+  if ("serviceWorker" in navigator) {
+    // Wait for service worker to be ready
+    navigator.serviceWorker.ready.then(() => {
+      console.log("Service worker ready, initializing notifications");
+      
+      if (Notification.permission === "granted") {
+        // Permission already granted, show notification if not shown before
+        requestNotificationPermissionAndMaybeNotify();
+      } else if (Notification.permission === "default") {
+        // Request permission on first user interaction
+        requestNotificationOnFirstUserGesture();
+      }
+    });
   } else {
-    requestNotificationOnFirstUserGesture();
+    console.log("Service workers not supported, notifications disabled");
   }
 }
+
+// Initialize notifications after page loads
+initializeNotifications();
 
 if (typeof localStorage !== "undefined") {
   if (localStorage.getItem(GATE_CAPTCHA_KEY) === "true") {

@@ -127,22 +127,30 @@
       -
     </button>
 
-    <button
-      type="button"
-      id="test-notification-btn"
-      class="btn-clear-storage"
-      title="Test notification (for debugging)"
-      style="right: 50px"
-    >
-      🔔
-    </button>
-
     <script src="./app.js"></script>
     <script>
-      if ("serviceWorker" in navigator && location.protocol === "https:") {
-        navigator.serviceWorker
-          .register("sw.js", { scope: "./" })
-          .catch(function () {});
+      // Register service worker (required for PWA notifications)
+      if ("serviceWorker" in navigator) {
+        // Allow https and localhost for development
+        const isSecureContext = 
+          location.protocol === "https:" || 
+          location.hostname === "localhost" ||
+          location.hostname === "127.0.0.1";
+        
+        if (isSecureContext) {
+          navigator.serviceWorker
+            .register("sw.js", { scope: "./" })
+            .then((registration) => {
+              console.log("Service Worker registered successfully:", registration.scope);
+            })
+            .catch((error) => {
+              console.error("Service Worker registration failed:", error);
+            });
+        } else {
+          console.warn("Service Worker requires HTTPS or localhost");
+        }
+      } else {
+        console.warn("Service Workers not supported in this browser");
       }
     </script>
   </body>
