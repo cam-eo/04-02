@@ -152,35 +152,47 @@ function startHintCountdown() {
 }
 
 /** Show one-time notification that stays until Lidia dismisses it (app is on the phone / wake up). */
-function maybeShowFirstLoadNotification() {
-  if (typeof Notification === "undefined") return;
+function showFirstLoadNotification() {
+  if (typeof Notification === "undefined") return false;
   try {
-    if (localStorage.getItem(FIRST_LOAD_NOTIFICATION_KEY) === "true") return;
-    if (Notification.permission !== "granted") return;
-    const n = new Notification("04.02 – Lidia", {
-      body: "Hola Lidia 🎉 Cam said you should open me",
+    if (localStorage.getItem(FIRST_LOAD_NOTIFICATION_KEY) === "true")
+      return false;
+
+    new Notification("04.02 – Lidia", {
+      body: "The app is on your phone — open me when you're ready!",
       icon: "./icons/favicon.png",
       tag: "pwa-first-load",
       requireInteraction: true, // Stays in tray until user dismisses (e.g. when she wakes up)
-    });
-    n.onclick = () => {
+    }).onclick = () => {
       window.focus();
-      n.close();
     };
+
     localStorage.setItem(FIRST_LOAD_NOTIFICATION_KEY, "true");
-  } catch (_) {}
+    return true;
+  } catch (err) {
+    console.error("Failed to show notification:", err);
+    return false;
+  }
 }
 
 /** Request notification permission (must be called from a user gesture). After grant, show first-load notification. */
 function requestNotificationPermissionAndMaybeNotify() {
   if (typeof Notification === "undefined") return;
+
   if (Notification.permission === "granted") {
-    maybeShowFirstLoadNotification();
+    showFirstLoadNotification();
     return;
   }
+
   if (Notification.permission === "default") {
-    Notification.requestPermission().then((p) => {
-      if (p === "granted") maybeShowFirstLoadNotification();
+    Notification.requestPermission().then((permission) => {
+      console.log("Notification permission result:", permission);
+      if (permission === "granted") {
+        // Short delay to ensure permission is fully granted
+        setTimeout(() => {
+          showFirstLoadNotification();
+        }, 100);
+      }
     });
   }
 }
