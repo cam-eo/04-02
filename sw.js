@@ -65,7 +65,10 @@ self.addEventListener("notificationclick", (event) => {
       .then((clientList) => {
         // If app is already open, focus it
         for (const client of clientList) {
-          if (client.url.includes(self.registration.scope) && "focus" in client) {
+          if (
+            client.url.includes(self.registration.scope) &&
+            "focus" in client
+          ) {
             return client.focus();
           }
         }

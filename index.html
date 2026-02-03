@@ -132,16 +132,19 @@
       // Register service worker (required for PWA notifications)
       if ("serviceWorker" in navigator) {
         // Allow https and localhost for development
-        const isSecureContext = 
-          location.protocol === "https:" || 
+        const isSecureContext =
+          location.protocol === "https:" ||
           location.hostname === "localhost" ||
           location.hostname === "127.0.0.1";
-        
+
         if (isSecureContext) {
           navigator.serviceWorker
             .register("sw.js", { scope: "./" })
             .then((registration) => {
-              console.log("Service Worker registered successfully:", registration.scope);
+              console.log(
+                "Service Worker registered successfully:",
+                registration.scope
+              );
             })
             .catch((error) => {
               console.error("Service Worker registration failed:", error);

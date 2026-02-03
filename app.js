@@ -174,7 +174,10 @@ async function showFirstLoadNotification() {
 
   // Check permission
   if (Notification.permission !== "granted") {
-    console.log("Notification permission not granted:", Notification.permission);
+    console.log(
+      "Notification permission not granted:",
+      Notification.permission
+    );
     return false;
   }
 
@@ -265,17 +268,22 @@ function requestNotificationOnFirstUserGesture() {
   const runOnce = () => {
     if (hasRun) return;
     hasRun = true;
-    
-    console.log("First user gesture detected, requesting notification permission");
+
+    console.log(
+      "First user gesture detected, requesting notification permission"
+    );
     requestNotificationPermissionAndMaybeNotify();
-    
+
     // Clean up listeners
     document.removeEventListener("click", runOnce);
     document.removeEventListener("touchstart", runOnce);
   };
 
   document.addEventListener("click", runOnce, { once: true });
-  document.addEventListener("touchstart", runOnce, { once: true, capture: true });
+  document.addEventListener("touchstart", runOnce, {
+    once: true,
+    capture: true,
+  });
 }
 
 passwordForm.addEventListener("submit", (e) => {
@@ -531,7 +539,7 @@ function initializeNotifications() {
     // Wait for service worker to be ready
     navigator.serviceWorker.ready.then(() => {
       console.log("Service worker ready, initializing notifications");
-      
+
       if (Notification.permission === "granted") {
         // Permission already granted, show notification if not shown before
         requestNotificationPermissionAndMaybeNotify();
