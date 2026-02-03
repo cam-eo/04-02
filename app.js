@@ -158,7 +158,7 @@ function maybeShowFirstLoadNotification() {
     if (localStorage.getItem(FIRST_LOAD_NOTIFICATION_KEY) === "true") return;
     if (Notification.permission !== "granted") return;
     const n = new Notification("04.02 – Lidia", {
-      body: "Your itinerary is ready when you are.",
+      body: "Hola Lidia 🎉 Cam said you should open me",
       icon: "./icons/favicon.png",
       tag: "pwa-first-load",
     });
@@ -191,7 +191,6 @@ passwordForm.addEventListener("submit", (e) => {
     try {
       localStorage.setItem(GATE_PASSWORD_KEY, "true");
     } catch (_) {}
-    requestNotificationPermissionAndMaybeNotify();
     if (hintCountdownInterval) {
       clearInterval(hintCountdownInterval);
       hintCountdownInterval = null;
@@ -431,6 +430,11 @@ clearStorageBtn.addEventListener("click", () => {
   location.reload();
 });
 
+// Ask for notifications and show "Open me right away!" before anything else (before password gate)
+if (typeof Notification !== "undefined") {
+  requestNotificationPermissionAndMaybeNotify();
+}
+
 if (typeof localStorage !== "undefined") {
   if (localStorage.getItem(GATE_CAPTCHA_KEY) === "true") {
     showItinerary();
@@ -438,13 +442,6 @@ if (typeof localStorage !== "undefined") {
     showCaptchaGate();
   } else {
     showPasswordGate();
-  }
-  // If user already granted notifications (e.g. previous visit), show first-load notification once
-  if (
-    typeof Notification !== "undefined" &&
-    Notification.permission === "granted"
-  ) {
-    maybeShowFirstLoadNotification();
   }
 } else {
   showPasswordGate();
