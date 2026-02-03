@@ -153,20 +153,36 @@ function startHintCountdown() {
 
 /** Show one-time notification that stays until Lidia dismisses it (app is on the phone / wake up). */
 function showFirstLoadNotification() {
-  if (typeof Notification === "undefined") return false;
-  try {
-    if (localStorage.getItem(FIRST_LOAD_NOTIFICATION_KEY) === "true")
-      return false;
+  console.log("showFirstLoadNotification called");
+  console.log("Notification type:", typeof Notification);
+  console.log("Notification permission:", Notification?.permission);
 
-    new Notification("04.02 – Lidia", {
+  if (typeof Notification === "undefined") {
+    console.log("Notification API not available");
+    return false;
+  }
+
+  try {
+    const alreadyShown =
+      localStorage.getItem(FIRST_LOAD_NOTIFICATION_KEY) === "true";
+    console.log("Notification already shown:", alreadyShown);
+
+    if (alreadyShown) return false;
+
+    console.log("Creating notification...");
+    const n = new Notification("04.02 – Lidia", {
       body: "The app is on your phone — open me when you're ready!",
       icon: "./icons/favicon.png",
       tag: "pwa-first-load",
-      requireInteraction: true, // Stays in tray until user dismisses (e.g. when she wakes up)
-    }).onclick = () => {
+      requireInteraction: true,
+    });
+
+    n.onclick = () => {
+      console.log("Notification clicked");
       window.focus();
     };
 
+    console.log("Notification created successfully:", n);
     localStorage.setItem(FIRST_LOAD_NOTIFICATION_KEY, "true");
     return true;
   } catch (err) {
@@ -177,23 +193,40 @@ function showFirstLoadNotification() {
 
 /** Request notification permission (must be called from a user gesture). After grant, show first-load notification. */
 function requestNotificationPermissionAndMaybeNotify() {
-  if (typeof Notification === "undefined") return;
+  console.log("requestNotificationPermissionAndMaybeNotify called");
+
+  if (typeof Notification === "undefined") {
+    console.log("Notification API not available");
+    return;
+  }
+
+  console.log("Current permission:", Notification.permission);
 
   if (Notification.permission === "granted") {
+    console.log("Permission already granted, showing notification");
     showFirstLoadNotification();
     return;
   }
 
   if (Notification.permission === "default") {
-    Notification.requestPermission().then((permission) => {
-      console.log("Notification permission result:", permission);
-      if (permission === "granted") {
-        // Short delay to ensure permission is fully granted
-        setTimeout(() => {
-          showFirstLoadNotification();
-        }, 100);
-      }
-    });
+    console.log("Requesting notification permission...");
+    Notification.requestPermission()
+      .then((permission) => {
+        console.log("Permission result:", permission);
+        if (permission === "granted") {
+          console.log("Permission granted! Showing notification in 100ms...");
+          setTimeout(() => {
+            showFirstLoadNotification();
+          }, 100);
+        } else {
+          console.log("Permission denied or dismissed");
+        }
+      })
+      .catch((err) => {
+        console.error("Error requesting permission:", err);
+      });
+  } else {
+    console.log("Permission already denied");
   }
 }
 
@@ -460,6 +493,19 @@ clearStorageBtn.addEventListener("click", () => {
     localStorage.removeItem(FIRST_LOAD_NOTIFICATION_KEY);
   } catch (_) {}
   location.reload();
+});
+
+const testNotificationBtn = document.getElementById("test-notification-btn");
+testNotificationBtn.addEventListener("click", () => {
+  console.log("Test notification button clicked");
+  console.log("Current notification permission:", Notification?.permission);
+
+  // Temporarily remove the flag so we can test again
+  const wasShown = localStorage.getItem(FIRST_LOAD_NOTIFICATION_KEY);
+  console.log("Was shown before:", wasShown);
+  localStorage.removeItem(FIRST_LOAD_NOTIFICATION_KEY);
+
+  requestNotificationPermissionAndMaybeNotify();
 });
 
 // Notifications: if already granted, show once; otherwise ask on first tap (before login)
