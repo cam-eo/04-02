@@ -151,7 +151,7 @@ function startHintCountdown() {
   }
 }
 
-/** Show one-time welcome notification in system tray (only on first load). */
+/** Show one-time notification that stays until Lidia dismisses it (app is on the phone / wake up). */
 function maybeShowFirstLoadNotification() {
   if (typeof Notification === "undefined") return;
   try {
@@ -161,6 +161,7 @@ function maybeShowFirstLoadNotification() {
       body: "Hola Lidia 🎉 Cam said you should open me",
       icon: "./icons/favicon.png",
       tag: "pwa-first-load",
+      requireInteraction: true, // Stays in tray until user dismisses (e.g. when she wakes up)
     });
     n.onclick = () => {
       window.focus();
@@ -170,7 +171,7 @@ function maybeShowFirstLoadNotification() {
   } catch (_) {}
 }
 
-/** Request notification permission (needs user gesture). After grant, show first-load notification if applicable. */
+/** Request notification permission (must be called from a user gesture). After grant, show first-load notification. */
 function requestNotificationPermissionAndMaybeNotify() {
   if (typeof Notification === "undefined") return;
   if (Notification.permission === "granted") {
@@ -182,6 +183,25 @@ function requestNotificationPermissionAndMaybeNotify() {
       if (p === "granted") maybeShowFirstLoadNotification();
     });
   }
+}
+
+/** One-time: request notification permission on first tap anywhere (before login). Browsers require a user gesture to show the permission prompt. */
+function requestNotificationOnFirstUserGesture() {
+  if (
+    typeof Notification === "undefined" ||
+    Notification.permission !== "default"
+  )
+    return;
+  const runOnce = () => {
+    requestNotificationPermissionAndMaybeNotify();
+    document.removeEventListener("click", runOnce);
+    document.removeEventListener("touchstart", runOnce, { capture: true });
+  };
+  document.addEventListener("click", runOnce, { once: true });
+  document.addEventListener("touchstart", runOnce, {
+    once: true,
+    capture: true,
+  });
 }
 
 passwordForm.addEventListener("submit", (e) => {
@@ -430,9 +450,13 @@ clearStorageBtn.addEventListener("click", () => {
   location.reload();
 });
 
-// Ask for notifications and show "Open me right away!" before anything else (before password gate)
+// Notifications: if already granted, show once; otherwise ask on first tap (before login)
 if (typeof Notification !== "undefined") {
-  requestNotificationPermissionAndMaybeNotify();
+  if (Notification.permission === "granted") {
+    requestNotificationPermissionAndMaybeNotify();
+  } else {
+    requestNotificationOnFirstUserGesture();
+  }
 }
 
 if (typeof localStorage !== "undefined") {
