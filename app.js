@@ -37,7 +37,7 @@ const GATE_CAPTCHA_KEY = "gate:captcha";
 const FIRST_LOAD_NOTIFICATION_KEY = "pwa:firstLoadNotificationShown";
 
 const PASSWORD = "Pebzi";
-const HINT_TEXT = "I have just eaten. I am still hungry! Who am I?";
+const HINT_TEXT = "I have just eaten. I am still hungry! Who am I? EXTRA HINT: My parents have many names for me, but my dad mostly calls me something";
 const HINT_AVAILABLE_AT = "2026-02-03T12:00:00";
 
 const CAPTCHA_CORRECT_TILES = [1, 2, 5, 7, 9];
