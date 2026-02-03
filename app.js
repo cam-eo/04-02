@@ -34,6 +34,7 @@ const ITINERARY = [
 const STORAGE_KEY = "started";
 const GATE_PASSWORD_KEY = "gate:password";
 const GATE_CAPTCHA_KEY = "gate:captcha";
+const FIRST_LOAD_NOTIFICATION_KEY = "pwa:firstLoadNotificationShown";
 
 const PASSWORD = "Pebzi";
 const HINT_TEXT = "I have just eaten. I am still hungry! Who am I?";
@@ -150,6 +151,39 @@ function startHintCountdown() {
   }
 }
 
+/** Show one-time welcome notification in system tray (only on first load). */
+function maybeShowFirstLoadNotification() {
+  if (typeof Notification === "undefined") return;
+  try {
+    if (localStorage.getItem(FIRST_LOAD_NOTIFICATION_KEY) === "true") return;
+    if (Notification.permission !== "granted") return;
+    const n = new Notification("04.02 – Lidia", {
+      body: "Your itinerary is ready when you are.",
+      icon: "./icons/favicon.png",
+      tag: "pwa-first-load",
+    });
+    n.onclick = () => {
+      window.focus();
+      n.close();
+    };
+    localStorage.setItem(FIRST_LOAD_NOTIFICATION_KEY, "true");
+  } catch (_) {}
+}
+
+/** Request notification permission (needs user gesture). After grant, show first-load notification if applicable. */
+function requestNotificationPermissionAndMaybeNotify() {
+  if (typeof Notification === "undefined") return;
+  if (Notification.permission === "granted") {
+    maybeShowFirstLoadNotification();
+    return;
+  }
+  if (Notification.permission === "default") {
+    Notification.requestPermission().then((p) => {
+      if (p === "granted") maybeShowFirstLoadNotification();
+    });
+  }
+}
+
 passwordForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const value = (passwordInput.value || "").trim();
@@ -157,6 +191,7 @@ passwordForm.addEventListener("submit", (e) => {
     try {
       localStorage.setItem(GATE_PASSWORD_KEY, "true");
     } catch (_) {}
+    requestNotificationPermissionAndMaybeNotify();
     if (hintCountdownInterval) {
       clearInterval(hintCountdownInterval);
       hintCountdownInterval = null;
@@ -391,6 +426,7 @@ clearStorageBtn.addEventListener("click", () => {
     localStorage.removeItem(STORAGE_KEY);
     localStorage.removeItem(GATE_PASSWORD_KEY);
     localStorage.removeItem(GATE_CAPTCHA_KEY);
+    localStorage.removeItem(FIRST_LOAD_NOTIFICATION_KEY);
   } catch (_) {}
   location.reload();
 });
@@ -402,6 +438,13 @@ if (typeof localStorage !== "undefined") {
     showCaptchaGate();
   } else {
     showPasswordGate();
+  }
+  // If user already granted notifications (e.g. previous visit), show first-load notification once
+  if (
+    typeof Notification !== "undefined" &&
+    Notification.permission === "granted"
+  ) {
+    maybeShowFirstLoadNotification();
   }
 } else {
   showPasswordGate();
