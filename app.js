@@ -10,7 +10,7 @@ const ITINERARY = [
       "https://freight.cargo.site/i/f7617d2523e80293346d8ededafe8930ff4c5e1afe17f22375a5e5ffba038baa/b2f8e7d38-4fbc-4d39-8338-a303b3c96879.jpg",
   },
   {
-    unlockTime: "2026-02-04T12:00:00",
+    unlockTime: "2026-02-04T14:00:00",
     title: "Movie",
     description: "The Housemaids",
     url: "./MovieTicket.pdf",
